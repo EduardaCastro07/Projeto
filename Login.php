@@ -24,16 +24,12 @@ if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "save" && $nome != "") {
         $stmt = $conexao->prepare("SELECT * FROM login WHERE usuario = :nome AND senha = :senha");
         $stmt->bindParam(1, $nome);
         $stmt->bindParam(2, $senha);
-        $stmt->execute();
          
-        // Verifica se encontrou um usuário com as credenciais fornecidas
         if ($stmt->rowCount() > 0) {
-            // Usuário autenticado com sucesso
             $_SESSION['usuario'] = $nome;
-            header("Location: pagina_protegida.php"); // Redireciona para a página desejada
+            header("Location: pagina_protegida.php"); 
             exit();
         } else {
-            // Credenciais inválidas
             $erro = "Usuário ou senha incorretos.";
         }
     } catch (PDOException $erro) {
@@ -46,25 +42,28 @@ if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "save" && $nome != "") {
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Agenda de contatos</title>
+        <title>Mukados</title>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <form action="?act=save" method="POST" name="form1" >
-          <h1>Agenda de contatos</h1>
-          <hr>
+        <form style="width: 40%;margin:auto;margin-top:10%" action="?act=save" method="POST" name="form1" >
+          <h1 style="font-style: normal;">Login</h1>
           <?php
-        // Exibe a mensagem de erro, se houver
+
             if (isset($erro)) {
                 echo "<p style='color:red;'>$erro</p>";
             }
           ?>
-          Nome: 
-          <input type="text" name="nome" />
-          Senha: 
-          <input type="password" name="senha" />
-          <br>
-         <input type="submit" value="Entrar" />
-         <hr>
+          <div style="display: flex;">
+            Usuário:    
+            <div><input type="text" name="nome" /> <br></div>
+          </div>
+          <div style="display:flex">
+            Senha: 
+            <div><input type="password" name="Senha" /></div>
+            <br>
+          </div>
+         <input class="entrar" type="submit" value="Entrar" />
        </form>
     </body>
 </html>
