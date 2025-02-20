@@ -21,7 +21,12 @@ try {
 
 if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "save" && $nome != "") {
     try {
-        $stmt = $conexao->prepare("INSERT INTO login (usuario, setor, senha) VALUES (?, ?, ?)");
+        if ($usuario != "") {
+            $stmt = $conexao->prepare("UPDATE login SET usuario=?, setor=?, senha=? WHERE usuario = ?");
+            $stmt->bindParam(4, $usuario);
+        } else {
+            $stmt = $conexao->prepare("INSERT INTO login (usuario, setor, senha) VALUES (?, ?, ?)");
+        }
         $stmt->bindParam(1, $nome);
         $stmt->bindParam(2, $setor);
         $stmt->bindParam(3, $senha);
@@ -43,6 +48,38 @@ if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "save" && $nome != "") {
     }
 }
 
+if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "upd" && $usuario != "") {
+    try {
+        $stmt = $conexao->prepare("SELECT * FROM login WHERE usuario = ?");
+        $stmt->bindParam(1, $id, PDO::PARAM_INT);
+        if ($stmt->execute()) {
+            $rs = $stmt->fetch(PDO::FETCH_OBJ);
+            $usuario = $rs->usuario;
+            $setor = $rs->setor;
+            $senha = $rs->senha;
+        } else {
+            throw new PDOException("Erro: Não foi possível executar a declaração sql");
+        }
+    } catch (PDOException $erro) {
+        echo "Erro: ".$erro->getMessage();
+    }
+}
+
+if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "del" && $usuario != "") {
+    try {
+        $stmt = $conexao->prepare("DELETE FROM login WHERE usuario = ?");
+        $stmt->bindParam(1, $usuario, PDO::PARAM_INT);
+        if ($stmt->execute()) {
+            echo "Registo foi excluído com êxito";
+            $id = null;
+        } else {
+            throw new PDOException("Erro: Não foi possível executar a declaração sql");
+        }
+    } catch (PDOException $erro) {
+        echo "Erro: ".$erro->getMessage();
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -55,24 +92,46 @@ if (isset($_REQUEST["act"]) && $_REQUEST["act"] == "save" && $nome != "") {
         <form action="?act=save" method="POST" name="form1" >
           <h1>Gerenciamento de usuários</h1>
           <hr>
-          <input type="hidden" name="id" />
-          Usuário:
-          <input type="text" name="nome" />
-          Setor:
-          <input type="text" name="email" />
-          Senha:
-         <input type="password" name="celular" />
-         <input type="submit" value="salvar" />
-         <input type="reset" value="Novo" />
+            Usuário:
+            <input type="text" name="nome" />
+            Setor:
+            <input type="text" name="setor" />
+            Senha:
+            <input type="password" name="senha" />
+            <input type="submit" value="salvar" />
+            <input type="reset" value="Novo" />
          <hr>
        </form>
 
-       <table style="border: solid 1px black;width:100%">
+       <table border="1" width="100%">
             <tr>
                 <th>Nome</th>
                 <th>Setor</th>
                 <th>Senha</th>
+                <th>Ações</th>
             </tr>
+
+            <?php
+                try {
+                
+                    $stmt = $conexao->prepare("SELECT * FROM login");
+                
+                        if ($stmt->execute()) {
+                            while ($rs = $stmt->fetch(PDO::FETCH_OBJ)) {
+                                echo "<tr>";
+                                echo "<td>".$rs->usuario."</td><td>".$rs->setor."</td><td>".$rs->senha
+                                            ."</td><td><center><a href=\"?act=upd&id=" . $rs->usuario . "\">[Alterar]</a>"
+                                            ."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                                            ."<a href=\"?act=del&id=" . $rs->usuario . "\">[Excluir]</a></center></td>";
+                                echo "</tr>";
+                            }
+                        } else {
+                            echo "Erro: Não foi possível recuperar os dados do banco de dados";
+                        }
+                } catch (PDOException $erro) {
+                    echo "Erro: ".$erro->getMessage();
+                }
+            ?>
         </table>
     </body>
 </html>
